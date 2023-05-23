@@ -1,36 +1,23 @@
-import os
-import random
-import math
+
 import pygame
 from os import listdir
 from os.path import isfile, join
+
 
 pygame.init()
 
 pygame.display.set_caption("V1 Platformer")
 
 
+
 WIDTH, HEIGHT = 1000, 800
 FPS = 60
 PLAYER_VEL = 5  # speed player
-game_front = pygame.font.Font('Montserrat-Bold.ttf',40)
+time1= 0
+real_time = 0
+hight_score = 12
 window = pygame.display.set_mode((WIDTH, HEIGHT))
-score = 0
-high_score = 0
 
-def score_display(game_state):
-    if game_state == "main_game":
-        score_surface = game_front.render(str(int(score)),True,(255,255,255))
-        score_rect = score_surface.get_rect(center = (288,100))
-        window.blit(score_surface,score_rect)
-    if game_state == "game_over":
-        score_surface = game_front.render(f'Score: {int(score)}', True, (255, 255, 255))
-        score_rect = score_surface.get_rect(center=(288, 100))
-        window.blit(score_surface, score_rect)
-
-        high_score_surface = game_front.render(f'High Score: {int(high_score)}', True, (255, 255, 255))
-        high_score_rect = score_surface.get_rect(center=(288, 800))
-        window.blit(high_score_surface, high_score_rect)
 
 def flip(sprites):
     return [pygame.transform.flip(sprite, True, False) for sprite in sprites]
@@ -67,6 +54,8 @@ def get_block(size):
     surface.blit(image, (0,0),rect)
     return pygame.transform.scale2x(surface)
 
+
+
 class Player(pygame.sprite.Sprite):
     COLOR = (255,0,0)
     GRAVITY = 1
@@ -85,6 +74,10 @@ class Player(pygame.sprite.Sprite):
         self.jump_count = 0
         self.hit = False
         self.hit_count = 0
+        self.game_over =0
+        self.score = 0
+        #self.hight_score
+
 
     def jump(self):
         self.y_vel = -self.GRAVITY * 8
@@ -157,6 +150,7 @@ class Player(pygame.sprite.Sprite):
         self.update()
 
     def update(self):
+
         self.rect = self.sprite.get_rect(topleft=(self.rect.x, self.rect.y))
         self.mask = pygame.mask.from_surface(self.sprite)
 
@@ -181,6 +175,74 @@ class Block(Object):
         block = get_block(size)
         self.image.blit(block, (0,0))
         self.mask = pygame.mask.from_surface(self.image)
+
+
+
+class Apple(Object):
+    ANIMATION_DELAY = 3
+
+    def __init__(self, x,y,width, height):
+        super().__init__(x,y, width, height, "apple")
+        self.apple = load_sprite_sheets("Items", "Fruits", width, height)
+        self.mask = pygame.mask.from_surface(self.image)
+        self.animation_count = 0
+        self.animation_name = "Apple"
+        self.off = 0
+
+    def loop(self):
+        sprites = self.apple[self.animation_name]
+        sprite_index = (self.animation_count // self.ANIMATION_DELAY) % len(sprites)
+        self.image = sprites[sprite_index]
+        self.animation_count += 1
+        self.rect = self.image.get_rect(topleft=(self.rect.x, self.rect.y))
+        self.mask = pygame.mask.from_surface(self.image)
+
+        if self.animation_count // self.ANIMATION_DELAY > len(sprites):
+            self.animation_count = 0
+
+class Kiwi(Object):
+    ANIMATION_DELAY = 3
+
+    def __init__(self, x,y,width, height):
+        super().__init__(x,y, width, height, "kiwi")
+        self.kiwi = load_sprite_sheets("Items", "Fruits", width, height)
+        self.mask = pygame.mask.from_surface(self.image)
+        self.animation_count = 0
+        self.animation_name = "Kiwi"
+        self.off = 0
+
+    def loop(self):
+        sprites = self.kiwi[self.animation_name]
+        sprite_index = (self.animation_count // self.ANIMATION_DELAY) % len(sprites)
+        self.image = sprites[sprite_index]
+        self.animation_count += 1
+        self.rect = self.image.get_rect(topleft=(self.rect.x, self.rect.y))
+        self.mask = pygame.mask.from_surface(self.image)
+
+        if self.animation_count // self.ANIMATION_DELAY > len(sprites):
+            self.animation_count = 0
+
+class Melon(Object):
+    ANIMATION_DELAY = 3
+
+    def __init__(self, x,y,width, height):
+        super().__init__(x,y, width, height, "melon")
+        self.melon = load_sprite_sheets("Items", "Fruits", width, height)
+        self.mask = pygame.mask.from_surface(self.image)
+        self.animation_count = 0
+        self.animation_name = "Melon"
+        self.off = 0
+
+    def loop(self):
+        sprites = self.melon[self.animation_name]
+        sprite_index = (self.animation_count // self.ANIMATION_DELAY) % len(sprites)
+        self.image = sprites[sprite_index]
+        self.animation_count += 1
+        self.rect = self.image.get_rect(topleft=(self.rect.x, self.rect.y))
+        self.mask = pygame.mask.from_surface(self.image)
+
+        if self.animation_count // self.ANIMATION_DELAY > len(sprites):
+            self.animation_count = 0
 
 class Fire(Object):
     ANIMATION_DELAY = 3
@@ -211,6 +273,132 @@ class Fire(Object):
         if self.animation_count // self.ANIMATION_DELAY > len(sprites):
             self.animation_count = 0
 
+class Fire_2(Object):
+    ANIMATION_DELAY = 3
+
+    def __init__(self, x, y, width, height):
+        super().__init__(x, y, width,height,"fire_2")
+        self.fire = load_sprite_sheets("Traps", "Fire", width, height)
+        self.image = self.fire["off"][0]
+        self.mask = pygame.mask.from_surface(self.image)
+        self.animation_count = 0
+        self.animation_name = "off"
+
+    def on(self):
+        self.animation_name = "on"
+
+    def off(self):
+        self.animation_name = "off"
+
+    def loop(self):
+
+        sprites = self.fire[self.animation_name]
+        sprite_index = (self.animation_count // self.ANIMATION_DELAY) % len(sprites)
+        self.image = sprites[sprite_index]
+        self.animation_count += 1
+        self.rect = self.image.get_rect(topleft=(self.rect.x, self.rect.y))
+        self.mask = pygame.mask.from_surface(self.image)
+
+        if self.animation_count // self.ANIMATION_DELAY > len(sprites):
+            self.animation_count = 0
+class Fire_3(Object):
+    ANIMATION_DELAY = 3
+
+    def __init__(self, x, y, width, height):
+        super().__init__(x, y, width,height,"fire_3")
+        self.fire = load_sprite_sheets("Traps", "Fire", width, height)
+        self.image = self.fire["off"][0]
+        self.mask = pygame.mask.from_surface(self.image)
+        self.animation_count = 0
+        self.animation_name = "off"
+
+    def on(self):
+        self.animation_name = "on"
+
+    def off(self):
+        self.animation_name = "off"
+
+    def loop(self):
+
+        sprites = self.fire[self.animation_name]
+        sprite_index = (self.animation_count // self.ANIMATION_DELAY) % len(sprites)
+        self.image = sprites[sprite_index]
+        self.animation_count += 1
+        self.rect = self.image.get_rect(topleft=(self.rect.x, self.rect.y))
+        self.mask = pygame.mask.from_surface(self.image)
+
+        if self.animation_count // self.ANIMATION_DELAY > len(sprites):
+            self.animation_count = 0
+
+class Saw(Object):
+    ANIMATION_DELAY = 3
+
+    def __init__(self, x, y, width, height):
+        super().__init__(x, y, width,height,"saw")
+        self.saw = load_sprite_sheets("Traps", "Saw", width, height)
+        self.mask = pygame.mask.from_surface(self.image)
+        self.animation_count = 0
+        self.animation_name = "on"
+
+
+    def loop(self):
+
+        sprites = self.saw[self.animation_name]
+        sprite_index = (self.animation_count // self.ANIMATION_DELAY) % len(sprites)
+        self.image = sprites[sprite_index]
+        self.animation_count += 1
+        self.rect = self.image.get_rect(topleft=(self.rect.x, self.rect.y))
+        self.mask = pygame.mask.from_surface(self.image)
+
+        if self.animation_count // self.ANIMATION_DELAY > len(sprites):
+            self.animation_count = 0
+
+class Saw_2(Object):
+    ANIMATION_DELAY = 3
+
+    def __init__(self, x, y, width, height):
+        super().__init__(x, y, width,height,"saw_2")
+        self.saw_2 = load_sprite_sheets("Traps", "Saw", width, height)
+        self.mask = pygame.mask.from_surface(self.image)
+        self.animation_count = 0
+        self.animation_name = "on"
+
+
+    def loop(self):
+
+        sprites = self.saw_2[self.animation_name]
+        sprite_index = (self.animation_count // self.ANIMATION_DELAY) % len(sprites)
+        self.image = sprites[sprite_index]
+        self.animation_count += 1
+        self.rect = self.image.get_rect(topleft=(self.rect.x, self.rect.y))
+        self.mask = pygame.mask.from_surface(self.image)
+
+        if self.animation_count // self.ANIMATION_DELAY > len(sprites):
+            self.animation_count = 0
+
+class Saw_3(Object):
+    ANIMATION_DELAY = 3
+
+    def __init__(self, x, y, width, height):
+        super().__init__(x, y, width,height,"saw_3")
+        self.saw_3 = load_sprite_sheets("Traps", "Saw", width, height)
+        self.mask = pygame.mask.from_surface(self.image)
+        self.animation_count = 0
+        self.animation_name = "on"
+
+
+    def loop(self):
+
+        sprites = self.saw_3[self.animation_name]
+        sprite_index = (self.animation_count // self.ANIMATION_DELAY) % len(sprites)
+        self.image = sprites[sprite_index]
+        self.animation_count += 1
+        self.rect = self.image.get_rect(topleft=(self.rect.x, self.rect.y))
+        self.mask = pygame.mask.from_surface(self.image)
+
+        if self.animation_count // self.ANIMATION_DELAY > len(sprites):
+            self.animation_count = 0
+
 def get_background(name):
     image = pygame.image.load(join("assets", "Background", name))
     _, _, width, height = image.get_rect()
@@ -223,19 +411,71 @@ def get_background(name):
 
     return tiles, image
 
-def draw(window, background,bg_image, player, objects, offset_x,run):
+
+def draw(window, background,bg_image, player, objects, offset_x,apple,melon,kiwi):
     for tile in background:
         window.blit(bg_image, tile)
 
-    for obj in objects:
-        obj.draw(window, offset_x)
-    score = 0
-    if run:
-        score += 0.01
-        score_display('main_game')
+    if apple.off == 0:
+        for obj in objects:
+            obj.draw(window, offset_x)
     else:
-        score_display('game_over')
-    player.draw(window, offset_x)
+        player.score+=1
+        objects.remove(apple)
+        apple.off = 0
+        for obj in objects:
+            obj.draw(window, offset_x)
+
+
+    if melon.off == -1:
+        player.score+=1
+        objects.remove(melon)
+        melon.off = 0
+
+
+    if kiwi.off == -1:
+        player.score+=1
+        objects.remove(kiwi)
+        kiwi.off = 0
+
+    game_over_font = pygame.font.Font('Sonic 1 Title Screen Filled.ttf', 40)
+    game_over_font_2 = pygame.font.Font('Sonic 1 Title Screen Outline.ttf', 40)
+    game_over_font_3 = pygame.font.Font('Sonic 1 Title Screen Outline.ttf', 20)
+
+
+
+    if player.game_over == 0:
+
+        player.draw(window, offset_x)
+        global real_time
+        global time1
+        time1+=1
+
+        if time1>100:
+            real_time=time1//100
+        tt = game_over_font.render(f'Time {real_time} ',True,0)
+        window.blit(tt, (20, 20))
+    else:
+
+        tt = game_over_font.render(f'Time {real_time} ', True, 0)
+        window.blit(tt, (20, 20))
+        time1 = 0
+        ds = game_over_font_2.render("Game Over",True,0)
+        dss = game_over_font.render("Press X to continue", True, 255)
+        window.blit(ds,(300,250))
+        window.blit(dss, (180, 300))
+
+    if player.score == 3:
+        ds = game_over_font_2.render("Victory", True, 0)
+        dss = game_over_font.render("Press Z to restart", True, 255)
+        window.blit(ds, (300, 250))
+        window.blit(dss, (180, 300))
+        tt = game_over_font.render(f'Time {real_time} ', True, 0)
+        window.blit(tt, (20, 20))
+        time1 = 0
+
+    ss = game_over_font_3.render(f'Best Time {hight_score} ', True, 0)
+    window.blit(ss, (20, 80))
 
     pygame.display.update()
 
@@ -266,7 +506,7 @@ def collide(player,objects,dx):
     player.update()
     return collided_object
 
-def handle_move(player, objects):
+def handle_move(player, objects,apple,melon,kiwi):
     keys = pygame.key.get_pressed()
 
     player.x_vel = 0
@@ -282,20 +522,56 @@ def handle_move(player, objects):
     vertical_collide = handle_vertical_collision(player, objects, player.y_vel)
     to_check = [collide_left, collide_right, *vertical_collide]
     for obj in to_check:
-       if obj and obj.name == "fire":
+       if (obj and obj.name == "fire") or (obj and obj.name == "fire_2") or (obj and obj.name == "fire_3") or (obj and obj.name == "saw") or (obj and obj.name == "saw_2") or (obj and obj.name == "saw_3"):
            player.make_hit()
+           player.game_over = -1
+       elif obj and obj.name =="apple":
+           apple.off = -1
+       elif obj and obj.name == "melon":
+           melon.off = -1
+       elif obj and obj.name == "kiwi":
+           kiwi.off = -1
 
 def main(window):
     clock = pygame.time.Clock()
     background, bg_image = get_background("Pink.png")
-
+    global hight_score
+    global real_time
+    global time1
     block_size = 96
+
     player = Player(100,100,50,50)
     floor = [Block(i *  block_size, HEIGHT - block_size, block_size) for i in range(-WIDTH // block_size, WIDTH * 2 // block_size)]
-    fire = Fire(100, HEIGHT - block_size - 64, 16, 32)
+    fire = Fire(500, HEIGHT - block_size - 64, 16, 32)
     fire.on()
-    objects = [*floor, Block(0, HEIGHT - block_size * 2, block_size), Block(block_size * 3, HEIGHT - block_size * 4, block_size), fire,
-               Block(block_size * 3, HEIGHT - block_size * 3, block_size), Block(block_size * 3, HEIGHT - block_size * 2, block_size)]
+    fire_2 = Fire_2(800, HEIGHT - block_size - 64, 16, 32)
+    fire_2.on()
+    fire_3 = Fire_2(1300, HEIGHT - block_size * 6- 64, 16, 32)
+    fire_3.on()
+    apple = Apple(400, HEIGHT - block_size - 64, 32, 32)
+    kiwi = Kiwi(1350, HEIGHT - block_size * 6 - 64, 32, 32)
+    melon = Melon(-850, HEIGHT - block_size * 2 - 64, 32, 32)
+    saw = Saw(-190,HEIGHT - block_size - 64, 96, 64)
+    saw_2 = Saw_2(-480,HEIGHT - block_size - 64, 96, 64)
+    saw_3 = Saw_3(-770, HEIGHT - block_size - 64, 96, 64)
+
+
+    objects = [*floor, Block(0, HEIGHT - block_size * 2, block_size),Block(block_size * -3, HEIGHT - block_size * 2, block_size),
+               Block(block_size * -6, HEIGHT - block_size * 2, block_size),Block(block_size * -9, HEIGHT - block_size * 2, block_size),
+               Block(block_size * -10, HEIGHT - block_size * 2, block_size),Block(block_size * 2, HEIGHT - block_size * 4, block_size),
+               Block(block_size * 3, HEIGHT - block_size * 4, block_size),Block(block_size * 4, HEIGHT - block_size * 4, block_size),
+               Block(block_size * 5, HEIGHT - block_size * 4, block_size),Block(block_size * 7, HEIGHT - block_size * 4, block_size),
+               Block(block_size * 8, HEIGHT - block_size * 4, block_size),Block(block_size * 9, HEIGHT - block_size * 4, block_size),
+               Block(block_size * 11, HEIGHT - block_size * 2, block_size),Block(block_size * 12, HEIGHT - block_size * 3, block_size),
+               Block(block_size * 13, HEIGHT - block_size * 4, block_size),Block(block_size * 14, HEIGHT - block_size * 5, block_size),
+               Block(block_size * 12, HEIGHT - block_size * 6, block_size),Block(block_size * 13, HEIGHT - block_size * 6, block_size),
+               Block(block_size * 14, HEIGHT - block_size * 6, block_size),Block(block_size * 15, HEIGHT - block_size * 6, block_size),
+               Block(block_size * 15, HEIGHT - block_size * 7, block_size),Block(block_size * 15, HEIGHT - block_size * 8, block_size),
+               Block(block_size * 15, HEIGHT - block_size * 9, block_size),Block(block_size * 15, HEIGHT - block_size * 7, block_size),fire,
+               Block(block_size * -11, HEIGHT - block_size * 2, block_size),Block(block_size * -11, HEIGHT - block_size * 3, block_size),
+               Block(block_size * -11, HEIGHT - block_size * 4, block_size), Block(block_size * -11, HEIGHT - block_size * 5, block_size),
+               Block(block_size * -11, HEIGHT - block_size * 6, block_size), Block(block_size * -11, HEIGHT - block_size * 7, block_size),
+           Block(block_size * 3, HEIGHT - block_size * 3, block_size), Block(block_size * 3, HEIGHT - block_size * 2, block_size),saw,saw_2,saw_3,fire_2,fire_3,apple,melon,kiwi]
 
     offset_x = 0
     scroll_area_width = 200
@@ -310,12 +586,58 @@ def main(window):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE and player.jump_count < 2:
                     player.jump()
+                if event.key == pygame.K_x and player.game_over == -1:
+                    player.game_over = 0
+                    player = Player(100, 100, 50, 50)
+                    offset_x = 0
+                    apple.off = 0
+                    if apple in objects:
+                        pass
+                    else:
+                        objects.append(apple)
+                    melon.off = 0
+                    if melon in objects:
+                        pass
+                    else:
+                        objects.append(melon)
+                    kiwi.off = 0
+                    if kiwi in objects:
+                        pass
+                    else:
+                        objects.append(kiwi)
+                if event.key == pygame.K_z and player.score == 3:
+                    player.score = 0
+                    player = Player(100, 100, 50, 50)
+                    offset_x = 0
+                    apple.off = 0
+                    objects.append(apple)
+                    melon.off = 0
+                    objects.append(melon)
+                    kiwi.off = 0
+                    objects.append(kiwi)
+                    if real_time < hight_score:
+                        hight_score = real_time
+                        time1 = 0
+
+
+
+
 
 
         player.loop(FPS)
+        saw_3.loop()
+        saw_2.loop()
+        saw.loop()
         fire.loop()
-        handle_move(player, objects)
-        draw(window, background , bg_image,player, objects, offset_x,run)
+        fire_2.loop()
+        fire_3.loop()
+        apple.loop()
+        kiwi.loop()
+        melon.loop()
+
+        handle_move(player, objects,apple,melon,kiwi)
+
+        draw(window, background , bg_image,player, objects, offset_x,apple,melon,kiwi)
 
         if ((player.rect.right - offset_x >= WIDTH - scroll_area_width) and player.x_vel >0) or ((player.rect.left - offset_x <= scroll_area_width) and player.x_vel < 0):
             offset_x += player.x_vel
