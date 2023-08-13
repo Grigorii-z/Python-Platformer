@@ -2,7 +2,7 @@
 import pygame
 from os import listdir
 from os.path import isfile, join
-
+#dinam download
 
 pygame.init()
 
@@ -16,15 +16,15 @@ PLAYER_VEL = 5  # speed player
 time1= 0
 real_time = 0
 hight_score = 12
-window = pygame.display.set_mode((WIDTH, HEIGHT))
+window = pygame.display.set_mode((WIDTH, HEIGHT)) #sozd okna
 
 
 def flip(sprites):
     return [pygame.transform.flip(sprite, True, False) for sprite in sprites]
 
 def load_sprite_sheets(dir1, dir2, width, height, direction=False):
-    path  = join("assets", dir1, dir2)
-    images = [f for f in listdir(path) if isfile(join(path, f))]
+    path = join("assets", dir1, dir2)
+    images = [f for f in listdir(path) if isfile(join(path, f))] #zagruz file iz konkret dir
 
     all_sprites = {}
 
@@ -35,7 +35,7 @@ def load_sprite_sheets(dir1, dir2, width, height, direction=False):
         for i in range(sprite_sheet.get_width()//width):
             surface = pygame.Surface((width, height), pygame.SRCALPHA, 32)
             rect = pygame.Rect(i * width, 0, width, height)
-            surface.blit(sprite_sheet, (0,0), rect)
+            surface.blit(sprite_sheet, (0,0), rect) #ric tol primoug
             sprites.append(pygame.transform.scale2x(surface))
 
         if direction:
@@ -50,16 +50,16 @@ def get_block(size):
     path = join("assets", "Terrain", "Terrain.png")
     image = pygame.image.load(path).convert_alpha()
     surface = pygame.Surface((size, size), pygame.SRCALPHA, 32)
-    rect = pygame.Rect(96, 0, size, size)
-    surface.blit(image, (0,0),rect)
+    rect = pygame.Rect(0, 128, size, size)
+    surface.blit(image, (0,0),rect) #stiraem i ostav tolko
     return pygame.transform.scale2x(surface)
 
 
 
-class Player(pygame.sprite.Sprite):
-    COLOR = (255,0,0)
+class Player(pygame.sprite.Sprite): #sprite dly udob v stalk
+
     GRAVITY = 1
-    SPRITES  = load_sprite_sheets("MainCharacters", "PinkMan", 32, 32, True)
+    SPRITES  = load_sprite_sheets("MainCharacters", "NinjaFrog", 32, 32, True)
     ANIMATION_DELAY = 3
 
     def __init__(self, x, y, width, height):
@@ -67,7 +67,7 @@ class Player(pygame.sprite.Sprite):
         self.rect = pygame.Rect(x, y, width, height)
         self.x_vel = 0
         self.y_vel = 0
-        self.mask = None
+        self.mask = None #na samom dele
         self.direction = "left"
         self.animation_count = 0
         self.fall_count = 0
@@ -76,7 +76,7 @@ class Player(pygame.sprite.Sprite):
         self.hit_count = 0
         self.game_over =0
         self.score = 0
-        #self.hight_score
+
 
 
     def jump(self):
@@ -128,7 +128,7 @@ class Player(pygame.sprite.Sprite):
         self.count = 0
         self.y_vel *= -1
 
-    def update_sprite(self):
+    def update_sprite(self): #smena anim ot sostoyn
         sprite_sheet = "idle"
         if self.hit:
             sprite_sheet = "hit"
@@ -142,9 +142,9 @@ class Player(pygame.sprite.Sprite):
         elif self.x_vel != 0:
             sprite_sheet = "run"
 
-        sprite_sheet_name = sprite_sheet + "_" + self.direction
+        sprite_sheet_name = sprite_sheet + "_" + self.direction #naprav
         sprites = self.SPRITES[sprite_sheet_name]
-        sprite_index = (self.animation_count // self.ANIMATION_DELAY) % len(sprites)
+        sprite_index = (self.animation_count // self.ANIMATION_DELAY) % len(sprites) #speed of anim caj 3 cadra
         self.sprite = sprites[sprite_index]
         self.animation_count += 1
         self.update()
@@ -152,7 +152,7 @@ class Player(pygame.sprite.Sprite):
     def update(self):
 
         self.rect = self.sprite.get_rect(topleft=(self.rect.x, self.rect.y))
-        self.mask = pygame.mask.from_surface(self.sprite)
+        self.mask = pygame.mask.from_surface(self.sprite) #otobraz vsex pix
 
     def draw(self, win, offset_x):
         win.blit(self.sprite, (self.rect.x - offset_x, self.rect.y))
@@ -183,7 +183,7 @@ class Apple(Object):
 
     def __init__(self, x,y,width, height):
         super().__init__(x,y, width, height, "apple")
-        self.apple = load_sprite_sheets("Items", "Fruits", width, height)
+        self.apple = load_sprite_sheets("Items", "Fruits",width, height)
         self.mask = pygame.mask.from_surface(self.image)
         self.animation_count = 0
         self.animation_name = "Apple"
@@ -399,20 +399,46 @@ class Saw_3(Object):
         if self.animation_count // self.ANIMATION_DELAY > len(sprites):
             self.animation_count = 0
 
+class FlagStart(Object):
+    ANIMATION_DELAY = 4
+
+    def __init__(self, x, y, width, height):
+        super().__init__(x, y, width,height,"flagstart")
+        self.flagstart = load_sprite_sheets("Items", "Checkpoints", width, height)
+        self.mask = pygame.mask.from_surface(self.image)
+        self.animation_count = 0
+        self.animation_name = "Flag1"
+        self.off = 0
+
+
+    def loop(self):
+
+        sprites = self.flagstart[self.animation_name]
+        sprite_index = (self.animation_count // self.ANIMATION_DELAY) % len(sprites)
+        self.image = sprites[sprite_index]
+        self.animation_count += 1
+        self.rect = self.image.get_rect(topleft=(self.rect.x, self.rect.y))
+        self.mask = pygame.mask.from_surface(self.image)
+
+        if self.animation_count // self.ANIMATION_DELAY > len(sprites):
+            self.animation_count = 0
+
 def get_background(name):
     image = pygame.image.load(join("assets", "Background", name))
-    _, _, width, height = image.get_rect()
+    _, _, width, height = image.get_rect() # x and y
     tiles = []
 
     for i in range(WIDTH // width + 1):
         for j in range(HEIGHT // height + 1):
-            pos = (i * width, j * height)
+            pos = (i * width, j * height) # vverx lev
             tiles.append(pos)
 
     return tiles, image
 
 
-def draw(window, background,bg_image, player, objects, offset_x,apple,melon,kiwi):
+def draw(window, background,bg_image, player, objects, offset_x,apple,flagstart,kiwi):
+
+
     for tile in background:
         window.blit(bg_image, tile)
 
@@ -427,10 +453,10 @@ def draw(window, background,bg_image, player, objects, offset_x,apple,melon,kiwi
             obj.draw(window, offset_x)
 
 
-    if melon.off == -1:
+    if flagstart.off == -1:
         player.score+=1
-        objects.remove(melon)
-        melon.off = 0
+        objects.remove(flagstart)
+        flagstart.off = 0
 
 
     if kiwi.off == -1:
@@ -477,14 +503,14 @@ def draw(window, background,bg_image, player, objects, offset_x,apple,melon,kiwi
     ss = game_over_font_3.render(f'Best Time {hight_score} ', True, 0)
     window.blit(ss, (20, 80))
 
-    pygame.display.update()
+    pygame.display.update() #totech obnov
 
 def handle_vertical_collision(player, objects, dy):
     collided_objects = []
     for obj in objects:
         if pygame.sprite.collide_mask(player, obj):
             if dy > 0:
-                player.rect.bottom = obj.rect.top
+                player.rect.bottom = obj.rect.top #niz k vverx
                 player.landed()
             elif dy <0:
                 player.rect.top = obj.rect.bottom
@@ -514,7 +540,6 @@ def handle_move(player, objects,apple,melon,kiwi):
     collide_right = collide(player, objects, PLAYER_VEL*2)
 
     if keys[pygame.K_LEFT] and not collide_left:
-
         player.move_left(PLAYER_VEL)
     if keys[pygame.K_RIGHT] and not collide_right:
         player.move_right(PLAYER_VEL)
@@ -527,14 +552,14 @@ def handle_move(player, objects,apple,melon,kiwi):
            player.game_over = -1
        elif obj and obj.name =="apple":
            apple.off = -1
-       elif obj and obj.name == "melon":
+       elif obj and obj.name == "flagstart":
            melon.off = -1
        elif obj and obj.name == "kiwi":
            kiwi.off = -1
 
 def main(window):
     clock = pygame.time.Clock()
-    background, bg_image = get_background("Pink.png")
+    background, bg_image = get_background("Purple.png")
     global hight_score
     global real_time
     global time1
@@ -542,42 +567,58 @@ def main(window):
 
     player = Player(100,100,50,50)
     floor = [Block(i *  block_size, HEIGHT - block_size, block_size) for i in range(-WIDTH // block_size, WIDTH * 2 // block_size)]
-    fire = Fire(500, HEIGHT - block_size - 64, 16, 32)
+    fire = Fire(1250, HEIGHT - block_size * 5 - 64, 16, 32)
     fire.on()
-    fire_2 = Fire_2(800, HEIGHT - block_size - 64, 16, 32)
+    fire_2 = Fire_2(1890, HEIGHT - block_size*3 - 64, 16, 32)
     fire_2.on()
-    fire_3 = Fire_2(1300, HEIGHT - block_size * 6- 64, 16, 32)
+    fire_3 = Fire_2(1650, HEIGHT - block_size * 5 - 64, 16, 32)
     fire_3.on()
-    apple = Apple(400, HEIGHT - block_size - 64, 32, 32)
-    kiwi = Kiwi(1350, HEIGHT - block_size * 6 - 64, 32, 32)
+    apple = Apple(600, HEIGHT - block_size * 5 - 64, 32, 32)
+    kiwi = Kiwi(1250, HEIGHT - block_size * 6 - 64, 32, 32)
     melon = Melon(-850, HEIGHT - block_size * 2 - 64, 32, 32)
-    saw = Saw(-190,HEIGHT - block_size - 64, 96, 64)
-    saw_2 = Saw_2(-480,HEIGHT - block_size - 64, 96, 64)
-    saw_3 = Saw_3(-770, HEIGHT - block_size - 64, 96, 64)
+    saw = Saw(700,HEIGHT - block_size - 64, 128, 64)
+    saw_2 = Saw_2(458,HEIGHT - block_size - 64, 128, 64)
+    saw_3 = Saw_3(200, HEIGHT - block_size - 64, 128, 64)
+
+    flagstart = FlagStart (2100, HEIGHT - block_size * 5 - 32, 64, 96)
 
 
-    objects = [*floor, Block(0, HEIGHT - block_size * 2, block_size),Block(block_size * -3, HEIGHT - block_size * 2, block_size),
-               Block(block_size * -6, HEIGHT - block_size * 2, block_size),Block(block_size * -9, HEIGHT - block_size * 2, block_size),
-               Block(block_size * -10, HEIGHT - block_size * 2, block_size),Block(block_size * 2, HEIGHT - block_size * 4, block_size),
-               Block(block_size * 3, HEIGHT - block_size * 4, block_size),Block(block_size * 4, HEIGHT - block_size * 4, block_size),
-               Block(block_size * 5, HEIGHT - block_size * 4, block_size),Block(block_size * 7, HEIGHT - block_size * 4, block_size),
-               Block(block_size * 8, HEIGHT - block_size * 4, block_size),Block(block_size * 9, HEIGHT - block_size * 4, block_size),
-               Block(block_size * 11, HEIGHT - block_size * 2, block_size),Block(block_size * 12, HEIGHT - block_size * 3, block_size),
-               Block(block_size * 13, HEIGHT - block_size * 4, block_size),Block(block_size * 14, HEIGHT - block_size * 5, block_size),
-               Block(block_size * 12, HEIGHT - block_size * 6, block_size),Block(block_size * 13, HEIGHT - block_size * 6, block_size),
-               Block(block_size * 14, HEIGHT - block_size * 6, block_size),Block(block_size * 15, HEIGHT - block_size * 6, block_size),
-               Block(block_size * 15, HEIGHT - block_size * 7, block_size),Block(block_size * 15, HEIGHT - block_size * 8, block_size),
-               Block(block_size * 15, HEIGHT - block_size * 9, block_size),Block(block_size * 15, HEIGHT - block_size * 7, block_size),fire,
-               Block(block_size * -11, HEIGHT - block_size * 2, block_size),Block(block_size * -11, HEIGHT - block_size * 3, block_size),
-               Block(block_size * -11, HEIGHT - block_size * 4, block_size), Block(block_size * -11, HEIGHT - block_size * 5, block_size),
-               Block(block_size * -11, HEIGHT - block_size * 6, block_size), Block(block_size * -11, HEIGHT - block_size * 7, block_size),
-           Block(block_size * 3, HEIGHT - block_size * 3, block_size), Block(block_size * 3, HEIGHT - block_size * 2, block_size),saw,saw_2,saw_3,fire_2,fire_3,apple,melon,kiwi]
+    objects = [*floor, Block(0, HEIGHT - block_size * 2, block_size), Block(0, HEIGHT - block_size * 3, block_size),
+               Block(0, HEIGHT - block_size * 4, block_size), Block(0, HEIGHT - block_size * 5, block_size),
+               Block(0, HEIGHT - block_size * 6, block_size), Block(0, HEIGHT - block_size * 7, block_size), Block(block_size * 1, HEIGHT - block_size * 2, block_size),
+               Block(block_size * 3, HEIGHT - block_size * 3, block_size), Block(block_size * 6, HEIGHT - block_size * 5, block_size),
+               Block(block_size * 10, HEIGHT - block_size * 5, block_size), Block(block_size * 10, HEIGHT - block_size * 4, block_size),
+               Block(block_size * 10, HEIGHT - block_size * 3, block_size), Block(block_size * 10, HEIGHT - block_size * 2, block_size),
+               Block(block_size * 11, HEIGHT - block_size * 5, block_size), Block(block_size * 12, HEIGHT - block_size * 5, block_size),
+               Block(block_size * 13, HEIGHT - block_size * 5, block_size), Block(block_size * 14, HEIGHT - block_size * 5, block_size),
+               Block(block_size * 15, HEIGHT - block_size * 5, block_size), Block(block_size * 16, HEIGHT - block_size * 5, block_size),
+               Block(block_size * 17, HEIGHT - block_size * 5, block_size), Block(block_size * 10, HEIGHT - block_size * 8, block_size), Block(block_size * 10, HEIGHT - block_size * 8, block_size),
+               Block(block_size * 11, HEIGHT - block_size * 8, block_size), Block(block_size * 12, HEIGHT - block_size * 8, block_size),
+               Block(block_size * 13, HEIGHT - block_size * 8, block_size), Block(block_size * 14, HEIGHT - block_size * 8, block_size),
+               Block(block_size * 15, HEIGHT - block_size * 8, block_size), Block(block_size * 16, HEIGHT - block_size * 8, block_size),
+               Block(block_size * 17, HEIGHT - block_size * 8, block_size), Block(block_size * 17, HEIGHT - block_size * 4, block_size),
+               Block(block_size * 17, HEIGHT - block_size * 3, block_size), Block(block_size * 17, HEIGHT - block_size * 2, block_size),
+               Block(block_size * 16, HEIGHT - block_size * 4, block_size), Block(block_size * 16, HEIGHT - block_size * 3, block_size),
+               Block(block_size * 16, HEIGHT - block_size * 2, block_size), Block(block_size * 15, HEIGHT - block_size * 4, block_size),
+               Block(block_size * 15, HEIGHT - block_size * 3, block_size), Block(block_size * 15, HEIGHT - block_size * 2, block_size),
+               Block(block_size * 14, HEIGHT - block_size * 4, block_size), Block(block_size * 14, HEIGHT - block_size * 3, block_size),
+               Block(block_size * 14, HEIGHT - block_size * 2, block_size), Block(block_size * 13, HEIGHT - block_size * 4, block_size),
+               Block(block_size * 13, HEIGHT - block_size * 3, block_size), Block(block_size * 13, HEIGHT - block_size * 2, block_size),
+               Block(block_size * 12, HEIGHT - block_size * 4, block_size), Block(block_size * 12, HEIGHT - block_size * 3, block_size),
+               Block(block_size * 12, HEIGHT - block_size * 2, block_size), Block(block_size * 11, HEIGHT - block_size * 4, block_size),
+               Block(block_size * 11, HEIGHT - block_size * 3, block_size), Block(block_size * 11, HEIGHT - block_size * 2, block_size),
+               Block(block_size * 18, HEIGHT - block_size * 4, block_size), Block(block_size * 18, HEIGHT - block_size * 3, block_size),
+               Block(block_size * 18, HEIGHT - block_size * 2, block_size), Block(block_size * 19, HEIGHT - block_size * 3, block_size),
+               Block(block_size * 19, HEIGHT - block_size * 2, block_size), Block(block_size * 20, HEIGHT - block_size * 3, block_size),
+               Block(block_size * 21, HEIGHT - block_size * 4, block_size), Block(block_size * 22, HEIGHT - block_size * 4, block_size),
+               Block(block_size * 23, HEIGHT - block_size * 4, block_size),
+               saw,saw_2,saw_3,fire,fire_2,fire_3,apple,flagstart,kiwi]
 
     offset_x = 0
     scroll_area_width = 200
     run = True
     while run:
-        clock.tick(FPS)
+        clock.tick(FPS) #cicle vipoln 60 za 2
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -595,11 +636,11 @@ def main(window):
                         pass
                     else:
                         objects.append(apple)
-                    melon.off = 0
-                    if melon in objects:
+                    flagstart.off = 0
+                    if flagstart in objects:
                         pass
                     else:
-                        objects.append(melon)
+                        objects.append(flagstart)
                     kiwi.off = 0
                     if kiwi in objects:
                         pass
@@ -611,8 +652,8 @@ def main(window):
                     offset_x = 0
                     apple.off = 0
                     objects.append(apple)
-                    melon.off = 0
-                    objects.append(melon)
+                    flagstart.off = 0
+                    objects.append(flagstart)
                     kiwi.off = 0
                     objects.append(kiwi)
                     if real_time < hight_score:
@@ -625,6 +666,7 @@ def main(window):
 
 
         player.loop(FPS)
+        flagstart.loop()
         saw_3.loop()
         saw_2.loop()
         saw.loop()
@@ -635,9 +677,9 @@ def main(window):
         kiwi.loop()
         melon.loop()
 
-        handle_move(player, objects,apple,melon,kiwi)
+        handle_move(player, objects,apple,flagstart,kiwi)
 
-        draw(window, background , bg_image,player, objects, offset_x,apple,melon,kiwi)
+        draw(window, background , bg_image,player, objects, offset_x,apple,flagstart,kiwi)
 
         if ((player.rect.right - offset_x >= WIDTH - scroll_area_width) and player.x_vel >0) or ((player.rect.left - offset_x <= scroll_area_width) and player.x_vel < 0):
             offset_x += player.x_vel
